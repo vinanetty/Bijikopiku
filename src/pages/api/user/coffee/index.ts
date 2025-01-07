@@ -65,20 +65,29 @@ interface PreferencesDTO {
   flavor: $Enums.Flavor;
 }
 
+const HIGH = 4;
+const MED = 3;
+const LOW = 2;
+const TOTAL = HIGH * 2 + MED * 1 + LOW * 2;
+
 async function filtered(filter: PreferencesDTO) {
   const coffees = await prisma.coffee.findMany({ where: { isDeleted: false } });
 
   const scoredCoffees = coffees.map((coffee) => {
     let matchRate = 0;
 
-    if (coffee.type === filter.type) matchRate += 4; // High
-    if (coffee.flavor === filter.flavor) matchRate += 4; // High
-    if (coffee.taste === filter.taste) matchRate += 3; // Medium
+    if (coffee.type === filter.type) matchRate += HIGH;
+    if (coffee.flavor === filter.flavor) matchRate += HIGH;
+    if (coffee.taste === filter.taste) matchRate += MED;
     if (coffee.isForCoffeeEnthusiast === filter.isForCoffeeEnthusiast)
-      matchRate += 2; // Low
-    if (coffee.isItForSweet === filter.isItForSweet) matchRate += 2; // Low
+      matchRate += LOW;
+    if (coffee.isItForSweet === filter.isItForSweet) matchRate += LOW;
 
-    return { ...coffee, matchRate };
+    const percentageMatchRate = parseFloat(
+      ((matchRate / TOTAL) * 100).toFixed(2)
+    );
+
+    return { ...coffee, matchRate, percentageMatchRate };
   });
 
   return scoredCoffees
